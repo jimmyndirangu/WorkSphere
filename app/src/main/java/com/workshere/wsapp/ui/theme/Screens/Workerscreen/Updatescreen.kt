@@ -21,8 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,11 +32,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import com.workshere.wsapp.Data.WorkerViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Updatescreen(navController: NavController) {
+fun Updatescreen(navController: NavController, id: String) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -57,19 +60,20 @@ fun Updatescreen(navController: NavController) {
             )
         }
     ) { paddingValues ->
-        UpdateContent(paddingValues = paddingValues)
+        UpdateContent(paddingValues = paddingValues, navController = navController, id = id)
     }
 }
 
 @Composable
-fun UpdateContent(paddingValues: PaddingValues) {
-    var workername by remember { mutableStateOf("") }
-    var workoccupation by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
-    var experience by remember { mutableStateOf("") }
-    var salary by remember { mutableStateOf("") }
+fun UpdateContent(paddingValues: PaddingValues, navController: NavController, id: String) {
+    var workername by remember { mutableStateOf(TextFieldValue()) }
+    var workeroccupation by remember { mutableStateOf(TextFieldValue()) }
+    var location by remember { mutableStateOf(TextFieldValue()) }
+    var experience by remember { mutableStateOf(TextFieldValue()) }
+    var salary by remember { mutableStateOf(TextFieldValue()) }
     var workerage by remember { mutableStateOf("") }
-    var phonenumber by remember { mutableStateOf("") }
+    var phonenumber by remember { mutableStateOf(TextFieldValue()) }
+    val context= LocalContext.current
     
     val imageUri = rememberSaveable { mutableStateOf<Uri?>(null) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -163,8 +167,8 @@ fun UpdateContent(paddingValues: PaddingValues) {
 
                 // Occupation Field
                 OutlinedTextField(
-                    value = workoccupation,
-                    onValueChange = { workoccupation = it },
+                    value = workeroccupation,
+                    onValueChange = { workeroccupation = it },
                     label = { Text("Occupation / Skill") },
                     modifier = Modifier.fillMaxWidth(),
                     leadingIcon = { Icon(Icons.Default.Work, contentDescription = null) },
@@ -249,7 +253,22 @@ fun UpdateContent(paddingValues: PaddingValues) {
 
         // Save Button
         Button(
-            onClick = { /* Handle update */ },
+            onClick = {
+                val update= WorkerViewModel()
+                update.updateworker(
+                    workerId = id,
+                    imageUri=imageUri.value,
+                    workername.text.trim(),
+                    workeroccupation.text.trim(),
+                    location.text.trim(),
+                    experience.text.trim(),
+                    salary.text.trim(),
+                    workerage.trim(),
+                    phonenumber.text.trim(),
+                    context,
+                    navController
+                )
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -269,6 +288,6 @@ fun UpdateContent(paddingValues: PaddingValues) {
 @Composable
 fun UpdatescreenPreview() {
     MaterialTheme {
-        UpdateContent(paddingValues = PaddingValues(0.dp))
+        UpdateContent(paddingValues = PaddingValues(0.dp), navController = rememberNavController(), id = "")
     }
 }

@@ -1,5 +1,6 @@
 package com.workshere.wsapp.Navigation
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -12,6 +13,8 @@ import com.workshere.wsapp.ui.theme.Screens.Loginbossscreen.Loginboss
 import com.workshere.wsapp.ui.theme.Screens.Signupbossscreen.Signupboss
 import com.workshere.wsapp.ui.theme.Screens.Signupworkerscreen.Signupworker
 import com.workshere.wsapp.ui.theme.Screens.Splashscreen.Splashscreen
+import com.workshere.wsapp.ui.theme.Screens.Workerscreen.Fillingscreen
+import com.workshere.wsapp.ui.theme.Screens.Workerscreen.Updatescreen
 
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier,
@@ -36,6 +39,13 @@ fun AppNavHost(modifier: Modifier = Modifier,
         }
         composable(ROUTE_BOSS){
             Bossscreen(navController)
+        }
+        composable(ROUTE_FILLING_WORKER){
+            Fillingscreen(navController)
+        }
+        composable("$ROUTE_UPDATE_WORKER/{id}"){ backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            Updatescreen(navController, id)
         }
 
     }

@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -22,8 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import com.workshere.wsapp.Data.WorkerViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,19 +62,24 @@ fun Fillingscreen(navController: NavController) {
             )
         }
     ) { paddingValues ->
-        FillingContent(paddingValues = paddingValues)
+        FillingContent(paddingValues = paddingValues, navController = navController)
     }
 }
 
 @Composable
-fun FillingContent(paddingValues: PaddingValues) {
-    var workername by remember { mutableStateOf("") }
-    var workoccupation by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
-    var experience by remember { mutableStateOf("") }
-    var salary by remember { mutableStateOf("") }
+fun FillingContent(paddingValues: PaddingValues, navController: NavController) {
+    var workername by remember { mutableStateOf(TextFieldValue()) }
+    var workeroccupation by remember { mutableStateOf(TextFieldValue()) }
+    var location by remember { mutableStateOf(TextFieldValue()) }
+    var experience by remember { mutableStateOf(TextFieldValue()) }
+    var salary by remember { mutableStateOf(TextFieldValue()) }
     var workerage by remember { mutableStateOf("") }
-    var phonenumber by remember { mutableStateOf("") }
+    var phonenumber by remember { mutableStateOf(TextFieldValue()) }
+
+    var isLoading by remember{mutableStateOf(false)}
+    var showSuccessDialog by remember{mutableStateOf(false)}
+
+    val context= LocalContext.current
     
     val imageUri = rememberSaveable { mutableStateOf<Uri?>(null) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -164,8 +173,8 @@ fun FillingContent(paddingValues: PaddingValues) {
 
                 // Occupation Field
                 OutlinedTextField(
-                    value = workoccupation,
-                    onValueChange = { workoccupation = it },
+                    value = workeroccupation,
+                    onValueChange = { workeroccupation = it },
                     label = { Text("Occupation / Skill") },
                     modifier = Modifier.fillMaxWidth(),
                     leadingIcon = { Icon(Icons.Default.Work, contentDescription = null) },
@@ -253,7 +262,23 @@ fun FillingContent(paddingValues: PaddingValues) {
 
         // Submit Button
         Button(
-            onClick = { /* Handle submission */ },
+            enabled = !isLoading,
+            onClick = {
+                isLoading=true
+                val fill = WorkerViewModel()
+               fill.fillingdetails(
+                    imageUri.value,
+                    workername.text.trim(),
+                    workeroccupation.text.trim(),
+                    location.text.trim(),
+                    experience.text.trim(),
+                    salary.text.trim(),
+                    workerage.trim(),
+                    phonenumber.text.trim(),
+                    context,
+                    navController
+                )
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -272,7 +297,6 @@ fun FillingContent(paddingValues: PaddingValues) {
 @Preview(showBackground = true)
 @Composable
 fun Fillingscreenprev() {
-    MaterialTheme {
-        FillingContent(paddingValues = PaddingValues(0.dp))
-    }
+    Fillingscreen(rememberNavController())
 }
+

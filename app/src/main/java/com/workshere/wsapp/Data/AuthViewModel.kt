@@ -9,7 +9,9 @@ import com.workshere.wsapp.Model.Boss
 import com.workshere.wsapp.Model.Worker
 import com.workshere.wsapp.Navigation.ROUTE_BOSS
 import com.workshere.wsapp.Navigation.ROUTE_CHOICE
+import com.workshere.wsapp.Navigation.ROUTE_FILLING_WORKER
 import com.workshere.wsapp.Navigation.ROUTE_LOGIN1
+import com.workshere.wsapp.Navigation.ROUTE_SIGNUP2
 
 
 class AuthViewModel (var navController: NavHostController, var context: Context ){
@@ -116,7 +118,7 @@ class AuthViewModel (var navController: NavHostController, var context: Context 
                                 .setValue(worker)
                                 .addOnSuccessListener { 
                                     Toast.makeText(context,"Registration successful", Toast.LENGTH_LONG).show()
-                                    navController.navigate(ROUTE_CHOICE)
+                                    navController.navigate(ROUTE_FILLING_WORKER)
                                 }
                                 .addOnFailureListener { 
                                     Toast.makeText(context,"Failed to save worker details: ${it.message}", Toast.LENGTH_LONG).show()

@@ -10,6 +10,7 @@ import android.net.Uri
 import com.google.firebase.database.FirebaseDatabase
 import com.workshere.wsapp.Model.Worker
 import com.workshere.wsapp.Navigation.ROUTE_BOSS
+import com.workshere.wsapp.Navigation.ROUTE_CHOICE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -27,10 +28,10 @@ class WorkerViewModel: ViewModel() {
     val uploadPreset="ws_image"
 
     fun fillingdetails(imageUri: Uri?, workername: String, workeroccupation: String, location: String,
-                       experience: String, salary: String, workage: String, phonenumber: String,
+                       experience: String, salary: String, workerage: String, phonenumber: String,
                        context: Context, navController: NavController){
         if(workername.isBlank()|| workeroccupation.isBlank()||location.isBlank()||experience.isBlank()||salary.isBlank()
-            ||workage.isBlank()||phonenumber.isBlank()){
+            ||workerage.isBlank()||phonenumber.isBlank()){
             Toast.makeText(context,"Please fill all fields",
                 Toast.LENGTH_SHORT).show()
             return
@@ -51,7 +52,7 @@ class WorkerViewModel: ViewModel() {
                     "location" to location,
                     "experience" to experience,
                     "salary" to salary,
-                    "workerage" to workage,
+                    "workerage" to workerage,
                     "phonenumber" to phonenumber,
                     "imageurl" to selectedImageUrl
 
@@ -60,6 +61,7 @@ class WorkerViewModel: ViewModel() {
                 withContext(Dispatchers.Main){
                     Toast.makeText(context,"Worker saved successfully",
                         Toast.LENGTH_LONG).show()
+                    navController.navigate(ROUTE_CHOICE)
                 }
             }catch (e: Exception){
                 withContext(Dispatchers.Main){
@@ -96,6 +98,7 @@ class WorkerViewModel: ViewModel() {
         return secureUrl ?: throw Exception("Failed to get secure URL from Cloudinary")
     }
     private val _workers = mutableStateListOf<Worker>()
+    val worker: List<Worker> =_workers
 
 
     fun fetchworker(context: Context){
@@ -122,7 +125,7 @@ class WorkerViewModel: ViewModel() {
         location: String,
         experience: String,
         salary: String,
-        workage: String,
+        workerage: String,
         phonenumber: String,
         context: Context,navController: NavController){
         viewModelScope.launch  (Dispatchers.IO){
@@ -135,7 +138,7 @@ class WorkerViewModel: ViewModel() {
                     "location" to location,
                     "experience" to experience,
                     "salary" to salary,
-                    "workage" to workage,
+                    "workerage" to workerage,
                     "phonenumber" to phonenumber)
                 if (selectedImageUrl!=null){
                     updatedata["imageurl"]=selectedImageUrl
