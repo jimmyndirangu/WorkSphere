@@ -42,7 +42,7 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation("androidx.navigation:navigation-compose:2.9.8")
     implementation(libs.androidx.compose.ui.graphics)
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
 
@@ -53,7 +53,7 @@ dependencies {
     implementation(libs.firebase.storage)
 
 //async image
-    implementation(libs.coil.compose)
+
 //    coil
     implementation(libs.coil3.coil.compose)
     implementation(libs.coil.network.okhttp)
