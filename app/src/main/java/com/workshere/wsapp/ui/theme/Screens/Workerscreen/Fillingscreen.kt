@@ -75,16 +75,15 @@ fun FillingContent(paddingValues: PaddingValues, navController: NavController) {
     var salary by remember { mutableStateOf(TextFieldValue()) }
     var workerage by remember { mutableStateOf("") }
     var phonenumber by remember { mutableStateOf(TextFieldValue()) }
+    var isLoading by remember { mutableStateOf(false) }
 
-    var isLoading by remember{mutableStateOf(false)}
-    var showSuccessDialog by remember{mutableStateOf(false)}
+    val context = LocalContext.current
 
-    val context= LocalContext.current
-    
     val imageUri = rememberSaveable { mutableStateOf<Uri?>(null) }
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let { imageUri.value = it }
-    }
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let { imageUri.value = it }
+        }
 
     Column(
         modifier = Modifier
@@ -94,7 +93,7 @@ fun FillingContent(paddingValues: PaddingValues, navController: NavController) {
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        
+
         // Header Section
         Text(
             text = "Personal Information",
@@ -104,7 +103,7 @@ fun FillingContent(paddingValues: PaddingValues, navController: NavController) {
             textAlign = TextAlign.Start,
             fontWeight = FontWeight.Bold
         )
-        
+
         Text(
             text = "Fill information on the required fields to complete. Countercheck to ensure everything is correct.",
             style = MaterialTheme.typography.bodyMedium,
@@ -157,7 +156,7 @@ fun FillingContent(paddingValues: PaddingValues, navController: NavController) {
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                
+
                 // Name Field
                 OutlinedTextField(
                     value = workername,
@@ -235,7 +234,12 @@ fun FillingContent(paddingValues: PaddingValues, navController: NavController) {
                         onValueChange = { if (it.length <= 2) workerage = it },
                         label = { Text("Age") },
                         modifier = Modifier.weight(1f),
-                        leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.CalendarToday,
+                                contentDescription = null
+                            )
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp)
@@ -265,8 +269,9 @@ fun FillingContent(paddingValues: PaddingValues, navController: NavController) {
             enabled = !isLoading,
             onClick = {
                 isLoading=true
+
                 val fill = WorkerViewModel()
-               fill.fillingdetails(
+                fill.fillingdetails(
                     imageUri.value,
                     workername.text.trim(),
                     workeroccupation.text.trim(),
@@ -276,8 +281,10 @@ fun FillingContent(paddingValues: PaddingValues, navController: NavController) {
                     workerage.trim(),
                     phonenumber.text.trim(),
                     context,
-                    navController
-                )
+                    navController) {
+                    isLoading=false
+                }
+
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -287,9 +294,14 @@ fun FillingContent(paddingValues: PaddingValues, navController: NavController) {
         ) {
             Icon(Icons.Default.Check, contentDescription = null)
             Spacer(Modifier.width(8.dp))
-            Text("SUBMIT PROFILE", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                if (isLoading){"Submitting..."
+                }else{"SUBMIT PROFILE"},
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
     }
 }

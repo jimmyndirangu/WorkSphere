@@ -1,5 +1,6 @@
 package com.workshere.wsapp.ui.theme.Screens.Bossscreen
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,6 +32,8 @@ import com.workshere.wsapp.Navigation.ROUTE_UPDATE_WORKER
 import com.workshere.wsapp.Data.WorkerViewModel
 import com.workshere.wsapp.Model.Worker
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import coil3.compose.AsyncImage
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -43,7 +46,13 @@ fun Bossscreen(navController: NavController) {
     var businesscode by remember { mutableStateOf(if (isPreview) "ABC-123" else "...") }
     val workerViewmodel=remember { WorkerViewModel() }
     val worker =workerViewmodel.worker
+    val filteredWorkers=worker.filter {
+        (it.workerName ?:"").contains(searchQuery, ignoreCase = true)||
+                (it.workeroccupation ?: "").contains(searchQuery, ignoreCase = true) ||
+                (it.location ?: "").contains(searchQuery, ignoreCase = true)
+    }
     val context=LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
 
     // Initialize Firebase only if not in preview to avoid render issues in Android Studio
     val auth = if (isPreview) null else FirebaseAuth.getInstance()
@@ -163,7 +172,11 @@ fun Bossscreen(navController: NavController) {
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    IconButton(onClick = { /* Copy code logic */ }) {
+                    IconButton(onClick = {
+                        clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(businesscode))
+                        Toast.makeText(context,"Join code copied!",
+                            Toast.LENGTH_SHORT).show()
+                    }) {
                         Icon(
                             imageVector = Icons.Default.ContentCopy,
                             contentDescription = "Copy Code",
@@ -180,7 +193,7 @@ fun Bossscreen(navController: NavController) {
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search for workers, skills...") },
+                placeholder = { Text("Search for workers...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true
@@ -207,7 +220,7 @@ fun Bossscreen(navController: NavController) {
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (worker.isEmpty()) {
+                if (filteredWorkers.isEmpty()) {
                     Text(
                         text = "No workers found",
                         style = MaterialTheme.typography.bodyMedium,
@@ -219,7 +232,7 @@ fun Bossscreen(navController: NavController) {
                         contentPadding = PaddingValues(8.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        items(worker) { item ->
+                        items(filteredWorkers) { item ->
                             WorkerItem(item, navController, workerViewmodel, context)
                         }
                     }

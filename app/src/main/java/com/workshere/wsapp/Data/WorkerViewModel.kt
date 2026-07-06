@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import android.net.Uri
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.core.operation.ListenComplete
 import com.workshere.wsapp.Model.Worker
 import com.workshere.wsapp.Navigation.ROUTE_BOSS
 import com.workshere.wsapp.Navigation.ROUTE_CHOICE
@@ -29,7 +30,7 @@ class WorkerViewModel: ViewModel() {
 
     fun fillingdetails(imageUri: Uri?, workername: String, workeroccupation: String, location: String,
                        experience: String, salary: String, workerage: String, phonenumber: String,
-                       context: Context, navController: NavController){
+                       context: Context, navController: NavController,onComplete:()-> Unit){
         if(workername.isBlank()|| workeroccupation.isBlank()||location.isBlank()||experience.isBlank()||salary.isBlank()
             ||workerage.isBlank()||phonenumber.isBlank()){
             Toast.makeText(context,"Please fill all fields",
@@ -59,14 +60,16 @@ class WorkerViewModel: ViewModel() {
                 )
                 ref.setValue(workerData).await()
                 withContext(Dispatchers.Main){
-                    Toast.makeText(context,"Worker saved successfully",
+                    Toast.makeText(context,"Worker saved successfully. Your boss can view your details now",
                         Toast.LENGTH_LONG).show()
+                    onComplete()
                     navController.navigate(ROUTE_CHOICE)
                 }
             }catch (e: Exception){
                 withContext(Dispatchers.Main){
                     Toast.makeText(context,"Failed to save: ${e.message}",
                         Toast.LENGTH_LONG).show()
+                    onComplete()
                 }
             }
         }
