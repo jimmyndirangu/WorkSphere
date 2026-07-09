@@ -28,27 +28,38 @@ class WorkerViewModel: ViewModel() {
     val cloudinaryUrl = "https://api.cloudinary.com/v1_1/dsyxjpsbl/image/upload"
     val uploadPreset="ws_image"
 
-    fun fillingdetails(imageUri: Uri?, workername: String, workeroccupation: String, location: String,
+    fun fillingdetails(bossId: String, imageUri: Uri?, workername: String, workeroccupation: String, location: String,
                        experience: String, salary: String, workerage: String, phonenumber: String,
-                       context: Context, navController: NavController,onComplete:()-> Unit){
+                       context: Context, navController: NavController, onComplete: () -> Unit){
         if(workername.isBlank()|| workeroccupation.isBlank()||location.isBlank()||experience.isBlank()||salary.isBlank()
             ||workerage.isBlank()||phonenumber.isBlank()){
-            Toast.makeText(context,"Please fill all fields",
-                Toast.LENGTH_SHORT).show()
+            Toast.makeText(context,"Please fill all fields", Toast.LENGTH_SHORT).show()
+            onComplete()
             return
         }
         if (imageUri==null){
-            Toast.makeText(context,"Please select image",
-                Toast.LENGTH_SHORT).show()
+            Toast.makeText(context,"Please select image", Toast.LENGTH_SHORT).show()
+            onComplete()
+            return
+        }
+        val workerId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+        if (workerId == null) {
+            Toast.makeText(context,"Not logged in", Toast.LENGTH_SHORT).show()
+            onComplete()
             return
         }
         viewModelScope.launch(Dispatchers.IO){
             try {
                 val selectedImageUrl = uploadToCloudinary(context,imageUri)
-                val ref = FirebaseDatabase.getInstance().getReference("Workers").push()
-                val workerData= mapOf(
-                    "id" to ref.key,
-                    "workername" to workername,
+                val ref = FirebaseDatabase.getInstance()
+                    .getReference("Boss")
+                    .child(bossId)
+                    .child("Workers")
+                    .child(workerId)
+                val workerData = mapOf(
+                    "workerId" to workerId,
+                    "bossId" to bossId,
+                    "workerName" to workername,
                     "workeroccupation" to workeroccupation,
                     "location" to location,
                     "experience" to experience,
@@ -56,9 +67,8 @@ class WorkerViewModel: ViewModel() {
                     "workerage" to workerage,
                     "phonenumber" to phonenumber,
                     "imageurl" to selectedImageUrl
-
                 )
-                ref.setValue(workerData).await()
+                ref.updateChildren(workerData).await()
                 withContext(Dispatchers.Main){
                     Toast.makeText(context,"Worker saved successfully. Your boss can view your details now",
                         Toast.LENGTH_LONG).show()
@@ -67,8 +77,7 @@ class WorkerViewModel: ViewModel() {
                 }
             }catch (e: Exception){
                 withContext(Dispatchers.Main){
-                    Toast.makeText(context,"Failed to save: ${e.message}",
-                        Toast.LENGTH_LONG).show()
+                    Toast.makeText(context,"Failed to save: ${e.message}", Toast.LENGTH_LONG).show()
                     onComplete()
                 }
             }
@@ -104,23 +113,26 @@ class WorkerViewModel: ViewModel() {
     val worker: List<Worker> =_workers
 
 
-    fun fetchworker(context: Context){
-        val ref= FirebaseDatabase.getInstance().getReference("Workers")
+    fun fetchworker(context: Context, bossId: String){
+        val ref = FirebaseDatabase.getInstance()
+            .getReference("Boss")
+            .child(bossId)
+            .child("Workers")
         ref.get().addOnSuccessListener { snapshot ->
             _workers.clear()
             for (child in snapshot.children){
-               val worker= child.getValue(Worker::class.java)
+                val worker = child.getValue(Worker::class.java)
                 worker?.let{
-                    it.workerId=child.key
+                    it.workerId = child.key
                     _workers.add(it)
                 }
             }
         }.addOnFailureListener {
-            Toast.makeText(context,"Failed to load workers",
-                Toast.LENGTH_LONG).show()
+            Toast.makeText(context,"Failed to load workers", Toast.LENGTH_LONG).show()
         }
     }
     fun updateworker(
+        bossId: String,
         workerId: String,
         imageUri: Uri?,
         workername: String,
@@ -130,12 +142,19 @@ class WorkerViewModel: ViewModel() {
         salary: String,
         workerage: String,
         phonenumber: String,
-        context: Context,navController: NavController){
-        viewModelScope.launch  (Dispatchers.IO){
+        context: Context, navController: NavController, onComplete: () -> Unit){
+
+        if(workername.isBlank() || workeroccupation.isBlank() || location.isBlank() ||
+            experience.isBlank() || salary.isBlank() || workerage.isBlank() || phonenumber.isBlank()) {
+            Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+            onComplete()
+            return
+        }
+
+        viewModelScope.launch(Dispatchers.IO){
             try {
-                val selectedImageUrl=imageUri?.let { uploadToCloudinary(context,it) }
-                val updatedata =mutableMapOf<String, Any?>(
-                    "id" to workerId,
+                val selectedImageUrl = imageUri?.let { uploadToCloudinary(context,it) }
+                val updatedata = mutableMapOf<String, Any?>(
                     "workername" to workername,
                     "workeroccupation" to workeroccupation,
                     "location" to location,
@@ -143,38 +162,34 @@ class WorkerViewModel: ViewModel() {
                     "salary" to salary,
                     "workerage" to workerage,
                     "phonenumber" to phonenumber)
-                if (selectedImageUrl!=null){
-                    updatedata["imageurl"]=selectedImageUrl
+                if (selectedImageUrl != null){
+                    updatedata["imageurl"] = selectedImageUrl
                 }
                 val ref = FirebaseDatabase.getInstance()
-                    .getReference("Workers").child(workerId)
+                    .getReference("Boss").child(bossId).child("Workers").child(workerId)
                 ref.updateChildren(updatedata).await()
-                fetchworker(context)
+                fetchworker(context, bossId)
                 withContext(Dispatchers.Main){
-                    Toast.makeText(context,"Worker updated successfully",
-                        Toast.LENGTH_LONG).show()
+                    Toast.makeText(context,"Worker updated successfully", Toast.LENGTH_LONG).show()
                     navController.navigate(ROUTE_BOSS)
                 }
             }catch (e: Exception){
                 withContext(Dispatchers.Main){
-                    Toast.makeText(context,"Worker update failed",
-                        Toast.LENGTH_LONG).show()
+                    Toast.makeText(context,"Worker update failed", Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
 
-    fun deleteworker(workerId: String,context: Context){
+    fun deleteworker(bossId: String, workerId: String, context: Context){
         val ref = FirebaseDatabase.getInstance()
-            .getReference("Workers").child(workerId)
+            .getReference("Boss").child(bossId).child("Workers").child(workerId)
         ref.removeValue().addOnSuccessListener {
-            _workers.removeAll { it.workerId==workerId }
-            Toast.makeText(context,"Worker deleted",
-                Toast.LENGTH_LONG).show()
+            _workers.removeAll { it.workerId == workerId }
+            Toast.makeText(context,"Worker deleted", Toast.LENGTH_LONG).show()
         }
             .addOnFailureListener {
-                Toast.makeText(context,"Worker deletion unsuccessful",
-                    Toast.LENGTH_LONG).show()
+                Toast.makeText(context,"Worker deletion unsuccessful", Toast.LENGTH_LONG).show()
             }
     }
 }

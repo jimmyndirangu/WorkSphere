@@ -37,7 +37,7 @@ import com.workshere.wsapp.Data.WorkerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Updatescreen(navController: NavController, id: String) {
+fun Updatescreen(navController: NavController, id: String, bossId: String) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -60,12 +60,12 @@ fun Updatescreen(navController: NavController, id: String) {
             )
         }
     ) { paddingValues ->
-        UpdateContent(paddingValues = paddingValues, navController = navController, id = id)
+        UpdateContent(paddingValues = paddingValues, navController = navController, id = id, bossId = bossId)
     }
 }
 
 @Composable
-fun UpdateContent(paddingValues: PaddingValues, navController: NavController, id: String) {
+fun UpdateContent(paddingValues: PaddingValues, navController: NavController, id: String, bossId: String) {
     var workername by remember { mutableStateOf(TextFieldValue()) }
     var workeroccupation by remember { mutableStateOf(TextFieldValue()) }
     var location by remember { mutableStateOf(TextFieldValue()) }
@@ -74,7 +74,7 @@ fun UpdateContent(paddingValues: PaddingValues, navController: NavController, id
     var workerage by remember { mutableStateOf("") }
     var phonenumber by remember { mutableStateOf(TextFieldValue()) }
     val context= LocalContext.current
-    
+    var isLoading by remember { mutableStateOf(false) }
     val imageUri = rememberSaveable { mutableStateOf<Uri?>(null) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { imageUri.value = it }
@@ -253,9 +253,12 @@ fun UpdateContent(paddingValues: PaddingValues, navController: NavController, id
 
         // Save Button
         Button(
+            enabled = !isLoading,
             onClick = {
+                isLoading=true
                 val update= WorkerViewModel()
                 update.updateworker(
+                    bossId = bossId,
                     workerId = id,
                     imageUri=imageUri.value,
                     workername.text.trim(),
@@ -267,7 +270,9 @@ fun UpdateContent(paddingValues: PaddingValues, navController: NavController, id
                     phonenumber.text.trim(),
                     context,
                     navController
-                )
+                ){
+                    isLoading=false
+                }
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -277,7 +282,11 @@ fun UpdateContent(paddingValues: PaddingValues, navController: NavController, id
         ) {
             Icon(Icons.Default.Save, contentDescription = null)
             Spacer(Modifier.width(8.dp))
-            Text("SAVE CHANGES", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                if (isLoading) "Updating..." else "SAVE CHANGES",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
         }
         
         Spacer(modifier = Modifier.height(24.dp))
@@ -288,6 +297,6 @@ fun UpdateContent(paddingValues: PaddingValues, navController: NavController, id
 @Composable
 fun UpdatescreenPreview() {
     MaterialTheme {
-        UpdateContent(paddingValues = PaddingValues(0.dp), navController = rememberNavController(), id = "")
+        UpdateContent(paddingValues = PaddingValues(0.dp), navController = rememberNavController(), id = "", bossId = "")
     }
 }

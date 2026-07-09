@@ -1,6 +1,7 @@
 package com.workshere.wsapp.ui.theme.Screens.Workerscreen
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -39,7 +40,7 @@ import com.workshere.wsapp.Data.WorkerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Fillingscreen(navController: NavController) {
+fun Fillingscreen(navController: NavController, bossId: String) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -62,12 +63,12 @@ fun Fillingscreen(navController: NavController) {
             )
         }
     ) { paddingValues ->
-        FillingContent(paddingValues = paddingValues, navController = navController)
+        FillingContent(paddingValues = paddingValues, navController = navController, bossId= bossId)
     }
 }
 
 @Composable
-fun FillingContent(paddingValues: PaddingValues, navController: NavController) {
+fun FillingContent(paddingValues: PaddingValues, navController: NavController, bossId: String) {
     var workername by remember { mutableStateOf(TextFieldValue()) }
     var workeroccupation by remember { mutableStateOf(TextFieldValue()) }
     var location by remember { mutableStateOf(TextFieldValue()) }
@@ -266,25 +267,39 @@ fun FillingContent(paddingValues: PaddingValues, navController: NavController) {
 
         // Submit Button
         Button(
+
             enabled = !isLoading,
             onClick = {
-                isLoading=true
+                val hasEmptyField = workername.text.isBlank() || workeroccupation.text.isBlank() ||
+                        location.text.isBlank() || experience.text.isBlank() || salary.text.isBlank() ||
+                        workerage.isBlank() || phonenumber.text.isBlank()
 
-                val fill = WorkerViewModel()
-                fill.fillingdetails(
-                    imageUri.value,
-                    workername.text.trim(),
-                    workeroccupation.text.trim(),
-                    location.text.trim(),
-                    experience.text.trim(),
-                    salary.text.trim(),
-                    workerage.trim(),
-                    phonenumber.text.trim(),
-                    context,
-                    navController) {
-                    isLoading=false
+                when {
+                    hasEmptyField -> {
+                        Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                    }
+                    imageUri.value == null -> {
+                        Toast.makeText(context, "Please select image", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        isLoading = true
+                        val fill = WorkerViewModel()
+                        fill.fillingdetails(
+                            bossId,
+                            imageUri.value,
+                            workername.text.trim(),
+                            workeroccupation.text.trim(),
+                            location.text.trim(),
+                            experience.text.trim(),
+                            salary.text.trim(),
+                            workerage.trim(),
+                            phonenumber.text.trim(),
+                            context,
+                            navController) {
+                            isLoading = false
+                        }
+                    }
                 }
-
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -309,6 +324,6 @@ fun FillingContent(paddingValues: PaddingValues, navController: NavController) {
 @Preview(showBackground = true)
 @Composable
 fun Fillingscreenprev() {
-    Fillingscreen(rememberNavController())
+    Fillingscreen(rememberNavController(), bossId = "preview_boss_id")
 }
 

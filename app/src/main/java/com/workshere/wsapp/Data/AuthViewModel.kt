@@ -11,6 +11,7 @@ import com.workshere.wsapp.Navigation.ROUTE_BOSS
 import com.workshere.wsapp.Navigation.ROUTE_CHOICE
 import com.workshere.wsapp.Navigation.ROUTE_FILLING_WORKER
 import com.workshere.wsapp.Navigation.ROUTE_LOGIN1
+import com.workshere.wsapp.Navigation.ROUTE_SIGNUP1
 import com.workshere.wsapp.Navigation.ROUTE_SIGNUP2
 
 
@@ -54,15 +55,31 @@ class AuthViewModel (var navController: NavHostController, var context: Context 
             }
         }
     }
-    fun loginboss(bossEmail: String,bossPass: String){
-        MAuth.signInWithEmailAndPassword(bossEmail,bossPass).addOnCompleteListener {
+    fun loginboss(bossEmail: String, bossPass: String){
+        MAuth.signInWithEmailAndPassword(bossEmail, bossPass).addOnCompleteListener {
             if (it.isSuccessful){
-                Toast.makeText(context,"Successfully logged in",
-                    Toast.LENGTH_LONG).show()
-                navController.navigate(ROUTE_BOSS)
-            }else{
-                Toast.makeText(context,"${it.exception!!.message}",
-                    Toast.LENGTH_LONG).show()
+                val uid = MAuth.currentUser!!.uid
+
+                FirebaseDatabase.getInstance()
+                    .getReference("Boss")
+                    .child(uid)
+                    .get()
+                    .addOnSuccessListener { snapshot ->
+                        if (snapshot.exists()){
+                            Toast.makeText(context, "Successfully logged in", Toast.LENGTH_LONG).show()
+                            navController.navigate(ROUTE_BOSS)
+                        } else {
+                            MAuth.signOut()
+                            Toast.makeText(context, "No boss account found. Please register first.", Toast.LENGTH_LONG).show()
+                            navController.navigate(ROUTE_SIGNUP1)
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(context, "Error checking account: ${e.message}", Toast.LENGTH_LONG).show()
+                        navController.navigate(ROUTE_LOGIN1)
+                    }
+            } else {
+                Toast.makeText(context, "${it.exception!!.message}", Toast.LENGTH_LONG).show()
                 navController.navigate(ROUTE_LOGIN1)
             }
         }
@@ -118,7 +135,7 @@ class AuthViewModel (var navController: NavHostController, var context: Context 
                                 .setValue(worker)
                                 .addOnSuccessListener { 
                                     Toast.makeText(context,"Registration successful", Toast.LENGTH_LONG).show()
-                                    navController.navigate(ROUTE_FILLING_WORKER)
+                                    navController.navigate("$ROUTE_FILLING_WORKER/$bossId")
                                 }
                                 .addOnFailureListener { 
                                     Toast.makeText(context,"Failed to save worker details: ${it.message}", Toast.LENGTH_LONG).show()

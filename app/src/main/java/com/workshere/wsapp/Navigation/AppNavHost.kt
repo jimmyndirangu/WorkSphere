@@ -40,12 +40,14 @@ fun AppNavHost(modifier: Modifier = Modifier,
         composable(ROUTE_BOSS){
             Bossscreen(navController)
         }
-        composable(ROUTE_FILLING_WORKER){
-            Fillingscreen(navController)
+        composable("$ROUTE_FILLING_WORKER/{bossId}"){backStackEntry->
+            val bossId = backStackEntry.arguments?.getString("bossId")?:""
+            Fillingscreen(navController, bossId)
         }
-        composable("$ROUTE_UPDATE_WORKER/{id}"){ backStackEntry ->
+        composable("$ROUTE_UPDATE_WORKER/{bossId}/{id}"){ backStackEntry ->
+            val bossId = backStackEntry.arguments?.getString("bossId")?:""
             val id = backStackEntry.arguments?.getString("id") ?: ""
-            Updatescreen(navController, id)
+            Updatescreen(navController,id=id,bossId=bossId)
         }
 
     }

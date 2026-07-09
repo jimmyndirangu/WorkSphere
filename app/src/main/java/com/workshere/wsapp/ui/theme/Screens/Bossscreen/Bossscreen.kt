@@ -61,8 +61,9 @@ fun Bossscreen(navController: NavController) {
 
     LaunchedEffect(bossId) {
         if (isPreview) return@LaunchedEffect
+        if (bossId == null)return@LaunchedEffect
         
-        workerViewmodel.fetchworker(context)
+        workerViewmodel.fetchworker(context,bossId)
         if (bossId == null) {
             // No user logged in, should ideally redirect to login
             return@LaunchedEffect
@@ -128,7 +129,7 @@ fun Bossscreen(navController: NavController) {
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
                     Text(
-                        text = "Welcome back,",
+                        text = "Welcome",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -233,7 +234,7 @@ fun Bossscreen(navController: NavController) {
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(filteredWorkers) { item ->
-                            WorkerItem(item, navController, workerViewmodel, context)
+                            WorkerItem(item, navController, workerViewmodel, context, bossId?:"")
                         }
                     }
                 }
@@ -247,7 +248,8 @@ fun WorkerItem(
     worker: Worker,
     navController: NavController,
     workerViewModel: WorkerViewModel,
-    context: android.content.Context
+    context: android.content.Context,
+    bossId: String
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -285,7 +287,7 @@ fun WorkerItem(
 
                 Row {
                     IconButton(onClick = {
-                        navController.navigate("${ROUTE_UPDATE_WORKER}/${worker.workerId}")
+                        navController.navigate("${ROUTE_UPDATE_WORKER}/${bossId}/${worker.workerId}")
                     }) {
                         Icon(
                             imageVector = Icons.Default.Edit,
@@ -294,7 +296,7 @@ fun WorkerItem(
                         )
                     }
                     IconButton(onClick = {
-                        workerViewModel.deleteworker(worker.workerId ?: "", context)
+                        workerViewModel.deleteworker(bossId, worker.workerId ?: "", context)
                     }) {
                         Icon(
                             imageVector = Icons.Default.Delete,
